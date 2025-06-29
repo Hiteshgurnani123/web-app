@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamnna's Ai - UPSC Preparation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1e1e2f;
+            --sidebar-bg: #161625;
+            --chat-area-bg: #27273a;
+            --user-bubble-bg: #3a3a5e;
+            --ai-bubble-bg: #2a2a4a;
+            --input-bg: #2c2c4c;
+            --text-color: #e0e0e0;
+            --text-muted-color: #a0a0b0;
+            --accent-color: #7f5af0;
+            --border-color: #3a3a5a;
+            --font-main: 'Inter', sans-serif;
+            --font-title: 'Poppins', sans-serif;
+        }
+
+        /* --- General Resets & Body --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+        }
+        
+        /* --- Main App Container --- */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease-in-out;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+        }
+        
+        .sidebar.collapsed {
+            margin-left: -260px;
+        }
+
+        .new-chat-btn {
+            margin: 0 1rem 1rem 1rem;
+            padding: 0.75rem;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .new-chat-btn:hover {
+            background-color: #987af3;
+        }
+        
+        .chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 1rem;
+        }
+        
+        .chat-history::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .chat-history::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .chat-history-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-muted-color);
+        }
+        
+        .chat-history-item:hover {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+        
+        .chat-history-item.active {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        /* --- Main Chat Area --- */
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--chat-area-bg);
+        }
+
+        /* --- Hamburger Menu for Mobile --- */
+        .menu-toggle {
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        /* --- Message Container (holds welcome screen and messages) --- */
+        .messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* --- Welcome Screen (New CSS) --- */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: auto;
+            padding: 2rem;
+        }
+
+        #welcome-screen .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, #7f5af0, #e91e63);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        #welcome-screen h1 {
+            font-family: var(--font-title);
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        #welcome-screen .subtitle {
+            font-size: 1rem;
+            color: var(--text-muted-color);
+            margin-bottom: 2.5rem;
+        }
+
+        .welcome-cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-card .icon {
+            margin-bottom: 0.75rem;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .feature-card p {
+            font-weight: 500;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 6px;
+        }
+
+        /* --- Chat Messages --- */
+        .message-wrapper {
+            display: flex;
+            margin-bottom: 1.5rem;
+            max-width: 80%;
+        }
+        
+        .message-bubble {
+            padding: 1rem;
+            border-radius: 16px;
+            line-height: 1.6;
+        }
+        
+        .message-wrapper.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+        
+        .message-wrapper.ai {
+            margin-right: auto;
+        }
+
+        .user .message-bubble {
+            background-color: var(--user-bubble-bg);
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai .message-bubble {
+            background-color: var(--ai-bubble-bg);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-bubble ul, .message-bubble ol {
+            padding-left: 1.5rem;
+        }
+        .message-bubble a {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background-color: var(--text-muted-color);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* --- Input Area --- */
+        .input-area-wrapper {
+            padding: 1rem 2rem 2rem 2rem;
+            flex-shrink: 0;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: flex-end; /* Align items to the bottom */
+            background-color: var(--input-bg);
+            border-radius: 12px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .input-area:focus-within {
+             border-color: var(--accent-color);
+        }
+        
+        /* New Icon Button Style */
+        .icon-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: var(--text-muted-color);
+            align-self: center; /* Center vertically within flex container */
+        }
+        .icon-btn:hover {
+            color: var(--accent-color);
+        }
+        .icon-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            padding: 0.5rem;
+            resize: none;
+            max-height: 150px; /* Limit max height */
+            overflow-y: auto;
+        }
+        
+        #send-btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; /* Prevent send button from shrinking */
+        }
+
+        #send-btn:hover {
+            background-color: #987af3;
+        }
+        
+        #send-btn:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+        
+        #send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                z-index: 99;
+                height: 100%;
+                margin-left: 0;
+                left: -260px; /* Start hidden */
+            }
+            .sidebar.collapsed {
+                 left: -260px;
+            }
+            .sidebar:not(.collapsed) {
+                 left: 0;
+            }
+            
+            #welcome-screen {
+                padding: 1rem;
+            }
+
+            .welcome-cards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-area-wrapper, .messages-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .message-wrapper {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <aside class="sidebar">
+        <button class="new-chat-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            New Chat
+        </button>
+        <div class="chat-history">
+            </div>
+    </aside>
+    
+    <main class="chat-area">
+        <div class="messages-container">
+            <div id="welcome-screen">
+                <div class="logo">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10c0-4.42-3.58-8-8-8"></path><path d="M12 2a10 10 0 0 0-3.53 19.53"></path><path d="M12 2a10 10 0 0 1 8 4"></path></svg>
+                </div>
+                <h1>Welcome to Tamnna's AI</h1>
+                <p class="subtitle">Your intelligent UPSC preparation companion by HiTesH</p>
+                
+                <div class="welcome-cards-container">
+                    <div class="feature-card">
+                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        <p>Study Materials</p>
+                    </div>
+                     <div class="feature-card">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <p>Practice Quizzes</p>
+                    </div>
+                     <div class="feature-card">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                        <p>Strategy Guidance</p>
+                    </div>
+                     <div class="feature-card">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <p>Current Affairs</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        <div class="input-area-wrapper">
+             <form class="input-area" id="message-form">
+                <input type="file" id="file-upload-input" hidden multiple>
+
+                <button type="button" id="attach-file-btn" class="icon-btn" title="Attach file">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
+                
+                <textarea id="message-input" placeholder="Ask me anything about UPSC preparation..." rows="1"></textarea>
+                
+                <button id="send-btn" type="submit" disabled>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const messagesContainer = document.querySelector('.messages-container');
+        const chatHistoryContainer = document.querySelector('.chat-history');
+        const newChatBtn = document.querySelector('.new-chat-btn');
+        const sidebar = document.querySelector('.sidebar');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        // NEW: File upload elements
+        const attachFileBtn = document.getElementById('attach-file-btn');
+        const fileUploadInput = document.getElementById('file-upload-input');
+
+        // --- App State ---
+        let allChats = [];
+        let currentChatId = null;
+        const WEBHOOK_URL = 'https://your-n8n-webhook-url.com/placeholder'; // IMPORTANT: Replace with your actual webhook URL
+
+        // --- Event Listeners ---
+        
+        messageForm.addEventListener('submit', handleSendMessage);
+        
+        messageInput.addEventListener('input', () => {
+            sendBtn.disabled = messageInput.value.trim() === '';
+            // Auto-resize textarea
+            messageInput.style.height = 'auto';
+            let scrollHeight = messageInput.scrollHeight;
+            const maxHeight = 150; // Must match CSS max-height
+            if (scrollHeight > maxHeight) {
+                messageInput.style.height = maxHeight + 'px';
+                messageInput.style.overflowY = 'auto';
+            } else {
+                messageInput.style.height = scrollHeight + 'px';
+                messageInput.style.overflowY = 'hidden';
+            }
+        });
+        
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                messageForm.dispatchEvent(new Event('submit'));
+            }
+        });
+        
+        newChatBtn.addEventListener('click', startNewChat);
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        // NEW: File Attach Listener
+        attachFileBtn.addEventListener('click', () => {
+            fileUploadInput.click();
+        });
+
+        fileUploadInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files.length > 0) {
+                // For now, just alert the name of the first file.
+                // In a real app, you would handle the file upload process here.
+                alert(`File selected: ${files[0].name}. Upload functionality needs to be built.`);
+                console.log('Selected files:', files);
+            }
+        });
+
+        // --- Core Functions ---
+
+        function initializeApp() {
+            loadChatsFromLocalStorage();
+            renderChatHistory();
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+            }
+
+            if (allChats.length > 0) {
+                currentChatId = allChats[allChats.length - 1].id;
+                loadChat(currentChatId);
+            } else {
+                startNewChat();
+            }
+            
+            sendBtn.disabled = messageInput.value.trim() === '';
+        }
+
+        async function handleSendMessage(e) {
+            e.preventDefault();
+            const userInput = messageInput.value.trim();
+            if (!userInput) return;
+            
+            // Hide welcome screen if it's the first message
+            if (welcomeScreen.style.display !== 'none') {
+                welcomeScreen.style.display = 'none';
+            }
+            
+            if (!getChatById(currentChatId)) {
+                createNewChat(userInput);
+            }
+            
+            addMessageToUI(userInput, 'user');
+            addMessageToState(userInput, 'user');
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            
+            showTypingIndicator();
+
+            try {
+                const aiResponse = await simulateWebhook(userInput);
+                
+                removeTypingIndicator();
+                addMessageToUI(aiResponse, 'ai');
+                addMessageToState(aiResponse, 'ai');
+                
+                renderChatHistory(); 
+                
+            } catch (error) {
+                console.error('Error fetching from webhook:', error);
+                removeTypingIndicator();
+                const errorMessage = "Sorry, I couldn't get a response. Please try again. \n\n**Error:** " + error.message;
+                addMessageToUI(errorMessage, 'ai');
+            }
+        }
+
+        function addMessageToUI(text, role) {
+            // Hide welcome screen whenever a message is added
+            if (welcomeScreen.style.display !== 'none') {
+                 welcomeScreen.style.display = 'none';
+            }
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `message-wrapper ${role}`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'message-bubble';
+            messageBubble.innerHTML = text;
+            
+            messageWrapper.appendChild(messageBubble);
+            messagesContainer.appendChild(messageWrapper);
+            scrollToBottom();
+        }
+
+        function addMessageToState(text, role) {
+            const currentChat = getChatById(currentChatId);
+            if (currentChat) {
+                currentChat.messages.push({ role, content: text });
+                saveChatsToLocalStorage();
+            }
+        }
+        
+        function showTypingIndicator() {
+            const indicatorWrapper = document.createElement('div');
+            indicatorWrapper.className = 'message-wrapper ai typing-indicator-wrapper';
+            indicatorWrapper.innerHTML = `
+                <div class="message-bubble">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(indicatorWrapper);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.querySelector('.typing-indicator-wrapper');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // --- Chat Management ---
+        function startNewChat() {
+            currentChatId = `chat_${Date.now()}`;
+            clearChatArea();
+            renderChatHistory(); 
+            messageInput.focus();
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+            }
+        }
+        
+        function createNewChat(firstMessage) {
+            const newChat = {
+                id: currentChatId,
+                title: firstMessage.substring(0, 35) + (firstMessage.length > 35 ? '...' : ''),
+                messages: []
+            };
+            allChats.push(newChat);
+            saveChatsToLocalStorage();
+            renderChatHistory();
+        }
+
+        function loadChat(chatId) {
+            const chat = getChatById(chatId);
+            if (!chat) {
+                console.error("Chat not found:", chatId);
+                startNewChat();
+                return;
+            }
+
+            currentChatId = chatId;
+            clearChatArea();
+
+            chat.messages.forEach(msg => {
+                addMessageToUI(msg.content, msg.role);
+            });
+            
+            // If after loading all messages, there are still none, show welcome screen.
+            if (chat.messages.length === 0) {
+                 welcomeScreen.style.display = 'flex';
+            }
+            
+            renderChatHistory();
+            scrollToBottom();
+            messageInput.focus();
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+            }
+        }
+
+        function clearChatArea() {
+            // Remove all message bubbles, but not the welcome screen itself
+            const messages = messagesContainer.querySelectorAll('.message-wrapper');
+            messages.forEach(msg => msg.remove());
+            
+            // Show the welcome screen
+            welcomeScreen.style.display = 'flex';
+        }
+        
+        function renderChatHistory() {
+            chatHistoryContainer.innerHTML = '';
+            // Render in reverse order (newest on top)
+            [...allChats].reverse().forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'chat-history-item';
+                item.textContent = chat.title;
+                item.dataset.chatId = chat.id;
+                
+                if (chat.id === currentChatId) {
+                    item.classList.add('active');
+                }
+                
+                item.addEventListener('click', () => {
+                    if (currentChatId !== chat.id) {
+                        loadChat(chat.id);
+                    }
+                });
+                
+                chatHistoryContainer.appendChild(item);
+            });
+        }
+        
+        function getChatById(chatId) {
+            return allChats.find(c => c.id === chatId);
+        }
+
+        // --- LocalStorage Persistence ---
+        function saveChatsToLocalStorage() {
+            try {
+                localStorage.setItem('tamnnaAiChats', JSON.stringify(allChats));
+            } catch (e) {
+                console.error("Failed to save chats to localStorage:", e);
+            }
+        }
+
+        function loadChatsFromLocalStorage() {
+            try {
+                const savedChats = localStorage.getItem('tamnnaAiChats');
+                if (savedChats) {
+                    allChats = JSON.parse(savedChats);
+                } else {
+                    allChats = [];
+                }
+            } catch (e) {
+                 console.error("Failed to load or parse chats from localStorage:", e);
+                 allChats = [];
+            }
+        }
+
+        // --- Webhook Simulation ---
+        function simulateWebhook(message) {
+            console.log(`Simulating POST to webhook with message: "${message}"`);
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let reply = '';
+                    const lowerCaseMessage = message.toLowerCase();
+                    
+                    if (lowerCaseMessage.includes('prelims strategy')) {
+                        reply = `
+                        Of course! Here is a basic strategy for UPSC Prelims:
+                        <ol>
+                            <li><strong>Master the Syllabus:</strong> Understand every topic mentioned.</li>
+                            <li><strong>NCERT Foundation:</strong> Build your base with NCERTs from Class 6-12.</li>
+                            <li><strong>Standard Books:</strong> Refer to one standard book per subject (e.g., Laxmikanth for Polity).</li>
+                            <li><strong>Current Affairs:</strong> Follow one newspaper (The Hindu/Indian Express) and a monthly magazine.</li>
+                            <li><strong>Mock Tests:</strong> Attempt at least 30-40 full-length tests and analyze them thoroughly.</li>
+                        </ol>
+                        For more details, you can visit <a href="https://www.insightsonindia.com/" target="_blank">Insights on India</a>.
+                        `;
+                    } else if (lowerCaseMessage.includes('नमस्ते') || lowerCaseMessage.includes('namaste')) {
+                        reply = "नमस्ते! मैं आपकी यूपीएससी तैयारी में कैसे मदद कर सकती हूँ?";
+                    } else if (lowerCaseMessage.includes('mains answer writing')) {
+                        reply = "Mains answer writing requires structure: Introduction, Body, and Conclusion. Use diagrams, flowcharts, and cite relevant data or committee reports. Practice daily!"
+                    } else {
+                        reply = "This is a simulated response. To get real answers, connect this app to a backend service. You asked: '" + message + "'";
+                    }
+                    resolve(reply);
+                }, 1500); // Simulate network delay
+            });
+        }
+        
+        // --- Utility Functions ---
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // --- Start the app ---
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
